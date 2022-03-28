@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -37,9 +40,7 @@ class SuperSelectableText extends StatefulWidget {
     this.textAlign = TextAlign.left,
     this.textDirection = TextDirection.ltr,
     this.textSelection = const TextSelection.collapsed(offset: -1),
-    this.textSelectionDecoration = const TextSelectionDecoration(
-      selectionColor: Color(0xFFACCEF7),
-    ),
+    this.textSelectionDecoration = const TextSelectionDecoration(),
     this.showCaret = false,
     this.textCaretFactory = const TextCaretFactory(
       color: Colors.black,
@@ -57,9 +58,7 @@ class SuperSelectableText extends StatefulWidget {
     this.textAlign = TextAlign.left,
     this.textDirection = TextDirection.ltr,
     this.textSelection = const TextSelection.collapsed(offset: -1),
-    this.textSelectionDecoration = const TextSelectionDecoration(
-      selectionColor: Color(0xFFACCEF7),
-    ),
+    this.textSelectionDecoration = const TextSelectionDecoration(),
     this.highlightWhenEmpty = false,
     this.showCaret = false,
     this.textCaretFactory = const TextCaretFactory(
@@ -574,10 +573,10 @@ class SuperSelectableTextState extends State<SuperSelectableText> implements Tex
 
 class TextSelectionDecoration {
   const TextSelectionDecoration({
-    required this.selectionColor,
+    this.selectionColor,
   });
 
-  final Color selectionColor;
+  final Color? selectionColor;
 
   Widget build({
     required BuildContext context,
@@ -587,11 +586,12 @@ class TextSelectionDecoration {
     required bool highlightWhenEmpty,
     required double emptyLineHeight,
   }) {
+    final Color color = selectionColor ?? CupertinoTheme.of(context).primaryColor.withOpacity(0.40);
     return CustomPaint(
       painter: _TextSelectionPainter(
         renderParagraph: renderParagraph,
         selection: selection,
-        selectionColor: selectionColor,
+        selectionColor: color,
         isTextEmpty: isTextEmpty,
         highlightWhenEmpty: highlightWhenEmpty,
         emptySelectionHeight: emptyLineHeight,

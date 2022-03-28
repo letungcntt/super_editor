@@ -249,7 +249,7 @@ class SuperDesktopTextFieldState extends State<SuperDesktopTextField> {
 
   double _getEstimatedLineHeight() {
     final defaultStyle = widget.textStyleBuilder({});
-    return (defaultStyle.height ?? 1.0) * defaultStyle.fontSize!;
+    return (defaultStyle.height ?? 1.0) * (defaultStyle.fontSize ?? 14.0);
   }
 
   @override

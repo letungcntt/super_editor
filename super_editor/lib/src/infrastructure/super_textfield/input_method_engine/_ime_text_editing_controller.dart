@@ -506,4 +506,19 @@ class ImeAttributedTextEditingController
   void clear() {
     _realController.clear();
   }
+
+  @override
+  void insertTextPlaceholder(Size size) {
+    // TODO: implement insertTextPlaceholder
+  }
+
+  @override
+  void removeTextPlaceholder() {
+    // TODO: implement removeTextPlaceholder
+  }
+
+  @override
+  void showToolbar() {
+    // TODO: implement showToolbar
+  }
 }
