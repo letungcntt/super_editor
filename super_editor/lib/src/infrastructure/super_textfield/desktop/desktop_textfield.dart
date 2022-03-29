@@ -1427,9 +1427,6 @@ class DefaultSuperTextFieldKeyboardHandlers {
       return TextFieldKeyboardHandlerResult.notHandled;
     }
 
-    // print('selection: ${controller.selection}');
-    print(keyEvent);
-
     if (controller.selection.extentOffset < 0) {
       return TextFieldKeyboardHandlerResult.notHandled;
     }
