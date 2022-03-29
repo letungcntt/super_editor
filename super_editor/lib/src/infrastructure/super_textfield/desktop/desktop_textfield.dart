@@ -1382,7 +1382,12 @@ class DefaultSuperTextFieldKeyboardHandlers {
       return TextFieldKeyboardHandlerResult.notHandled;
     }
 
-    controller.insertCharacter(keyEvent.character!);
+    String character = keyEvent.character!;
+    for(int i = 0; i<character.length; i++) {
+      controller.insertCharacter(character[i]);
+    }
+
+    // controller.insertCharacter(keyEvent.character!);
 
     return TextFieldKeyboardHandlerResult.handled;
   }
@@ -1421,6 +1426,10 @@ class DefaultSuperTextFieldKeyboardHandlers {
     if (!isBackspace && !isDelete) {
       return TextFieldKeyboardHandlerResult.notHandled;
     }
+
+    // print('selection: ${controller.selection}');
+    print(keyEvent);
+
     if (controller.selection.extentOffset < 0) {
       return TextFieldKeyboardHandlerResult.notHandled;
     }
