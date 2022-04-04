@@ -103,7 +103,7 @@ class SuperDesktopTextField extends StatefulWidget {
 }
 
 class SuperDesktopTextFieldState extends State<SuperDesktopTextField> {
-  final _selectableTextKey = GlobalKey<SuperSelectableTextState>();
+  final selectableTextKey = GlobalKey<SuperSelectableTextState>();
   final _textScrollKey = GlobalKey<SuperTextFieldScrollviewState>();
   late FocusNode _focusNode;
   bool _hasFocus = false; // cache whether we have focus so we know when it changes
@@ -169,7 +169,7 @@ class SuperDesktopTextFieldState extends State<SuperDesktopTextField> {
     super.dispose();
   }
 
-  TextLayout get textLayout => _selectableTextKey.currentState as TextLayout;
+  TextLayout get textLayout => selectableTextKey.currentState as TextLayout;
 
   FocusNode get focusNode => _focusNode;
 
@@ -232,12 +232,12 @@ class SuperDesktopTextFieldState extends State<SuperDesktopTextField> {
       return 0;
     }
 
-    if (_selectableTextKey.currentState == null) {
+    if (selectableTextKey.currentState == null) {
       return 0;
     }
 
     final offsetAtEndOfText =
-        _selectableTextKey.currentState!.getOffsetAtPosition(TextPosition(offset: _controller.text.text.length));
+        selectableTextKey.currentState!.getOffsetAtPosition(TextPosition(offset: _controller.text.text.length));
     int lineCount = (offsetAtEndOfText.dy / _getEstimatedLineHeight()).ceil();
 
     if (_controller.text.text.endsWith('\n')) {
@@ -254,7 +254,7 @@ class SuperDesktopTextFieldState extends State<SuperDesktopTextField> {
 
   @override
   Widget build(BuildContext context) {
-    if (_selectableTextKey.currentContext == null) {
+    if (selectableTextKey.currentContext == null) {
       // The text hasn't been laid out yet, which means our calculations
       // for text height is probably wrong. Schedule a post frame callback
       // to re-calculate the height after initial layout.
@@ -272,12 +272,12 @@ class SuperDesktopTextFieldState extends State<SuperDesktopTextField> {
     return SuperTextFieldKeyboardInteractor(
       focusNode: _focusNode,
       textController: _controller,
-      textKey: _selectableTextKey,
+      textKey: selectableTextKey,
       keyboardActions: widget.keyboardHandlers,
       child: SuperTextFieldGestureInteractor(
         focusNode: _focusNode,
         textController: _controller,
-        textKey: _selectableTextKey,
+        textKey: selectableTextKey,
         textScrollKey: _textScrollKey,
         isMultiline: isMultiline,
         onRightClick: widget.onRightClick,
@@ -295,7 +295,7 @@ class SuperDesktopTextFieldState extends State<SuperDesktopTextField> {
             return _buildDecoration(
               child: SuperTextFieldScrollview(
                 key: _textScrollKey,
-                textKey: _selectableTextKey,
+                textKey: selectableTextKey,
                 textController: _controller,
                 scrollController: _scrollController,
                 viewportHeight: _viewportHeight,
@@ -323,13 +323,17 @@ class SuperDesktopTextFieldState extends State<SuperDesktopTextField> {
   }
 
   Widget _buildSelectableText() {
+    bool isShoWCaret = _focusNode.hasFocus
+      ? _controller.selection.baseOffset != _controller.selection.extentOffset ? false : true
+      : _focusNode.hasFocus;
+    
     return SuperSelectableText(
-      key: _selectableTextKey,
+      key: selectableTextKey,
       textSpan: _controller.text.computeTextSpan(widget.textStyleBuilder),
       textAlign: widget.textAlign,
       textSelection: _controller.selection,
       textSelectionDecoration: widget.textSelectionDecoration,
-      showCaret: _focusNode.hasFocus,
+      showCaret: isShoWCaret,
       textCaretFactory: widget.textCaretFactory,
     );
   }
