@@ -39,6 +39,7 @@ class SuperDesktopTextField extends StatefulWidget {
     Key? key,
     this.focusNode,
     this.textController,
+    this.scrollController,
     this.textStyleBuilder = defaultStyleBuilder,
     this.textAlign = TextAlign.left,
     this.hintBehavior = HintBehavior.displayHintUntilFocus,
@@ -57,6 +58,7 @@ class SuperDesktopTextField extends StatefulWidget {
     this.decorationBuilder,
     this.onRightClick,
     this.keyboardHandlers = defaultTextFieldKeyboardHandlers,
+    this.onKey
   }) : super(key: key);
 
   final FocusNode? focusNode;
@@ -98,6 +100,10 @@ class SuperDesktopTextField extends StatefulWidget {
   /// key presses, for text input, deletion, caret movement, etc.
   final List<TextFieldKeyboardHandler> keyboardHandlers;
 
+  final KeyEventResult Function(FocusNode, RawKeyEvent)? onKey;
+
+  final ScrollController? scrollController;
+
   @override
   SuperDesktopTextFieldState createState() => SuperDesktopTextFieldState();
 }
@@ -109,7 +115,6 @@ class SuperDesktopTextFieldState extends State<SuperDesktopTextField> {
   bool _hasFocus = false; // cache whether we have focus so we know when it changes
 
   late AttributedTextEditingController _controller;
-  late ScrollController _scrollController;
 
   double? _viewportHeight;
 
@@ -122,7 +127,6 @@ class SuperDesktopTextFieldState extends State<SuperDesktopTextField> {
 
     _controller = (widget.textController ?? AttributedTextEditingController())
       ..addListener(_onSelectionOrContentChange);
-    _scrollController = ScrollController();
   }
 
   @override
@@ -156,7 +160,6 @@ class SuperDesktopTextFieldState extends State<SuperDesktopTextField> {
 
   @override
   void dispose() {
-    _scrollController.dispose();
     _focusNode.removeListener(_onFocusChange);
     if (widget.focusNode == null) {
       _focusNode.dispose();
@@ -203,7 +206,7 @@ class SuperDesktopTextFieldState extends State<SuperDesktopTextField> {
 
   /// Returns true if the viewport height changed, false otherwise.
   bool _updateViewportHeight() {
-    final estimatedLineHeight = _getEstimatedLineHeight();
+    final estimatedLineHeight = _getEstimatedLineHeight() + 2.0;
     final estimatedLinesOfText = _getEstimatedLinesOfText();
     final estimatedContentHeight = estimatedLinesOfText * estimatedLineHeight;
     final minHeight = widget.minLines != null ? widget.minLines! * estimatedLineHeight + widget.padding.vertical : null;
@@ -270,6 +273,7 @@ class SuperDesktopTextFieldState extends State<SuperDesktopTextField> {
     final isMultiline = widget.minLines != 1 || widget.maxLines != 1;
 
     return SuperTextFieldKeyboardInteractor(
+      onKey: widget.onKey,
       focusNode: _focusNode,
       textController: _controller,
       textKey: selectableTextKey,
@@ -297,7 +301,7 @@ class SuperDesktopTextFieldState extends State<SuperDesktopTextField> {
                 key: _textScrollKey,
                 textKey: selectableTextKey,
                 textController: _controller,
-                scrollController: _scrollController,
+                scrollController: widget.scrollController ?? ScrollController(),
                 viewportHeight: _viewportHeight,
                 estimatedLineHeight: _getEstimatedLineHeight(),
                 padding: widget.padding,
@@ -412,12 +416,10 @@ class _SuperTextFieldGestureInteractorState extends State<SuperTextFieldGestureI
   SuperTextFieldScrollviewState get _textScroll => widget.textScrollKey.currentState!;
 
   void _onTapDown(TapDownDetails details) {
-    _log.fine('Tap down on SuperTextField');
     _selectionType = _SelectionType.position;
 
     final textOffset = _getTextOffset(details.localPosition);
     final tapTextPosition = _getPositionNearestToTextOffset(textOffset);
-    _log.finer("Tap text position: $tapTextPosition");
 
     final expandSelection = RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.shiftLeft) ||
         RawKeyboard.instance.keysPressed.contains(LogicalKeyboardKey.shiftRight) ||
@@ -430,11 +432,9 @@ class _SuperTextFieldGestureInteractorState extends State<SuperTextFieldGestureI
               extentOffset: tapTextPosition.offset,
             )
           : TextSelection.collapsed(offset: tapTextPosition.offset);
-
-      _log.finer("New text field selection: ${widget.textController.selection}");
     });
 
-    widget.focusNode.requestFocus();
+    if(!widget.focusNode.hasFocus) widget.focusNode.requestFocus();
   }
 
   void _onDoubleTapDown(TapDownDetails details) {
@@ -452,7 +452,7 @@ class _SuperTextFieldGestureInteractorState extends State<SuperTextFieldGestureI
       _clearSelection();
     }
 
-    widget.focusNode.requestFocus();
+    if(!widget.focusNode.hasFocus) widget.focusNode.requestFocus();
   }
 
   void _onDoubleTap() {
@@ -474,7 +474,7 @@ class _SuperTextFieldGestureInteractorState extends State<SuperTextFieldGestureI
       _clearSelection();
     }
 
-    widget.focusNode.requestFocus();
+    if(!widget.focusNode.hasFocus) widget.focusNode.requestFocus();
   }
 
   void _onTripleTap() {
@@ -486,23 +486,20 @@ class _SuperTextFieldGestureInteractorState extends State<SuperTextFieldGestureI
   }
 
   void _onPanStart(DragStartDetails details) {
-    _log.finer('_onPanStart()');
     _dragStartInViewport = details.localPosition;
     _dragStartInText = _getTextOffset(_dragStartInViewport!);
 
     _dragRectInViewport = Rect.fromLTWH(_dragStartInViewport!.dx, _dragStartInViewport!.dy, 1, 1);
 
-    widget.focusNode.requestFocus();
+    if(!widget.focusNode.hasFocus) widget.focusNode.requestFocus();
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
-    _log.finer('_onPanUpdate()');
     setState(() {
       _dragEndInViewport = details.localPosition;
       _dragEndInText = _getTextOffset(_dragEndInViewport!);
       _dragRectInViewport = Rect.fromPoints(_dragStartInViewport!, _dragEndInViewport!);
-      _log.finer('_onPanUpdate - drag rect: $_dragRectInViewport');
-      _updateCursorStyle(details.localPosition);
+      // _updateCursorStyle(details.localPosition);
       _updateDragSelection();
 
       _scrollIfNearBoundary();
@@ -726,9 +723,13 @@ class _SuperTextFieldGestureInteractorState extends State<SuperTextFieldGestureI
 
   @override
   Widget build(BuildContext context) {
+    if(widget.focusNode.hasFocus && _cursorStyle.value == SystemMouseCursors.basic) {
+      _cursorStyle.value = SystemMouseCursors.text;
+    } else if(!widget.focusNode.hasFocus && _cursorStyle.value == SystemMouseCursors.text) {
+      _cursorStyle.value = SystemMouseCursors.basic;
+    }
     return Listener(
       onPointerSignal: _onPointerSignal,
-      onPointerHover: _onMouseMove,
       child: GestureDetector(
         onSecondaryTapUp: _onRightClick,
         child: RawGestureDetector(
@@ -787,6 +788,7 @@ class SuperTextFieldKeyboardInteractor extends StatefulWidget {
     required this.textKey,
     required this.keyboardActions,
     required this.child,
+    this.onKey
   }) : super(key: key);
 
   /// [FocusNode] for this text field.
@@ -824,6 +826,8 @@ class SuperTextFieldKeyboardInteractor extends StatefulWidget {
   /// The rest of the subtree for this text field.
   final Widget child;
 
+  final KeyEventResult Function(FocusNode, RawKeyEvent)? onKey;
+
   @override
   _SuperTextFieldKeyboardInteractorState createState() => _SuperTextFieldKeyboardInteractorState();
 }
@@ -834,6 +838,10 @@ class _SuperTextFieldKeyboardInteractorState extends State<SuperTextFieldKeyboar
     if (keyEvent is! RawKeyDownEvent) {
       _log.finer('_onKeyPressed - not a "down" event. Ignoring.');
       return KeyEventResult.ignored;
+    }
+
+    if(widget.onKey != null) {
+      if(widget.onKey!(focusNode, keyEvent) == KeyEventResult.handled) return KeyEventResult.handled;
     }
 
     TextFieldKeyboardHandlerResult instruction = TextFieldKeyboardHandlerResult.notHandled;

@@ -12,14 +12,14 @@ class InteractiveTextFieldDemo extends StatefulWidget {
 
 class _InteractiveTextFieldDemoState extends State<InteractiveTextFieldDemo> {
   final _textFieldController = AttributedTextEditingController(
-    text: AttributedText(
-        text: 'Super Editor is an open source text editor for Flutter projects.',
-        spans: AttributedSpans(attributions: [
-          const SpanMarker(attribution: brandAttribution, offset: 0, markerType: SpanMarkerType.start),
-          const SpanMarker(attribution: brandAttribution, offset: 11, markerType: SpanMarkerType.end),
-          const SpanMarker(attribution: flutterAttribution, offset: 47, markerType: SpanMarkerType.start),
-          const SpanMarker(attribution: flutterAttribution, offset: 53, markerType: SpanMarkerType.end),
-        ])),
+    // text: AttributedText(
+    //     text: 'Super Editor is an open source text editor for Flutter projects.',
+    //     spans: AttributedSpans(attributions: [
+    //       const SpanMarker(attribution: brandAttribution, offset: 0, markerType: SpanMarkerType.start),
+    //       const SpanMarker(attribution: brandAttribution, offset: 11, markerType: SpanMarkerType.end),
+    //       const SpanMarker(attribution: flutterAttribution, offset: 47, markerType: SpanMarkerType.start),
+    //       const SpanMarker(attribution: flutterAttribution, offset: 53, markerType: SpanMarkerType.end),
+    //     ])),
   );
 
   OverlayEntry? _popupEntry;
@@ -117,53 +117,38 @@ class _InteractiveTextFieldDemoState extends State<InteractiveTextFieldDemo> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        // Remove focus from text field when the user taps anywhere else.
-        _focusNode!.unfocus();
-      },
-      child: Center(
-        child: SizedBox(
-          width: 400,
-          child: GestureDetector(
-            onTap: () {
-              // no-op. Prevents unfocus from happening when text field is tapped.
-            },
-            child: SizedBox(
-              width: double.infinity,
-              child: SuperDesktopTextField(
-                textController: _textFieldController,
-                focusNode: _focusNode,
-                textStyleBuilder: _textStyleBuilder,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decorationBuilder: (context, child) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: _focusNode!.hasFocus ? Colors.blue : Colors.grey.shade300,
-                        width: 1,
-                      ),
-                    ),
-                    child: child,
-                  );
-                },
-                hintBuilder: (context) {
-                  return const Text(
-                    'enter some text',
-                    style: TextStyle(
-                      color: Colors.grey,
-                    ),
-                  );
-                },
-                hintBehavior: HintBehavior.displayHintUntilTextEntered,
-                minLines: 5,
-                maxLines: 5,
-                onRightClick: _onRightClick,
+    return Center(
+      child: SizedBox(
+        width: double.infinity,
+        child: SuperDesktopTextField(
+          textController: _textFieldController,
+          focusNode: _focusNode,
+          textStyleBuilder: _textStyleBuilder,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decorationBuilder: (context, child) {
+            return Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: _focusNode!.hasFocus ? Colors.blue : Colors.grey.shade300,
+                  width: 1,
+                ),
               ),
-            ),
-          ),
+              child: child,
+            );
+          },
+          hintBuilder: (context) {
+            return const Text(
+              'enter some text',
+              style: TextStyle(
+                color: Colors.grey,
+              ),
+            );
+          },
+          hintBehavior: HintBehavior.displayHintUntilTextEntered,
+          minLines: 1,
+          maxLines: 22,
+          onRightClick: _onRightClick,
         ),
       ),
     );
