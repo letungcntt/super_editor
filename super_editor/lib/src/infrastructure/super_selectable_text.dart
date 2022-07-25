@@ -311,7 +311,7 @@ class SuperSelectableTextState extends State<SuperSelectableText> implements Tex
       ));
     }
 
-    return boxes.first;
+    return boxes.isNotEmpty ? boxes.first : const TextBox.fromLTRBD(0, 0, 0, 0, TextDirection.ltr);
   }
 
   @override
